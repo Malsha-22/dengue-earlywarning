@@ -78,6 +78,8 @@ export default function Home() {
     "w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow bg-white";
   const labelClass = "block text-sm font-medium mb-1.5 text-slate-700";
   const cardClass = "bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 rounded-xl p-6 shadow-sm";
+  const numberBoxClass =
+    "w-20 text-sm font-mono text-teal-700 border border-teal-200 rounded px-1.5 py-0.5 text-right bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none";
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -141,43 +143,48 @@ export default function Home() {
             })}
           </div>
 
-          <div className="flex justify-between items-baseline mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-sm font-medium text-slate-700">Last month&apos;s cases</label>
-            <span className="text-sm font-mono text-teal-700">{lastMonthCases}</span>
+            <input type="number" className={numberBoxClass}
+              value={lastMonthCases} onChange={(e) => setLastMonthCases(Number(e.target.value))} />
           </div>
-          <input type="range" min={0} max={3000} step={5}
+          <input type="range" min={0} max={3000} step={1}
             value={lastMonthCases} onChange={(e) => setLastMonthCases(Number(e.target.value))}
             className="w-full accent-teal-600 mb-4" />
 
-          <div className="flex justify-between items-baseline mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-sm font-medium text-slate-700">3-month average cases</label>
-            <span className="text-sm font-mono text-teal-700">{recentAvgCases}</span>
+            <input type="number" className={numberBoxClass}
+              value={recentAvgCases} onChange={(e) => setRecentAvgCases(Number(e.target.value))} />
           </div>
-          <input type="range" min={0} max={3000} step={5}
+          <input type="range" min={0} max={3000} step={1}
             value={recentAvgCases} onChange={(e) => setRecentAvgCases(Number(e.target.value))}
             className="w-full accent-teal-600 mb-4" />
 
-          <div className="flex justify-between items-baseline mb-1.5">
-            <label className="text-sm font-medium text-slate-700">Last month&apos;s avg temp (°C)</label>
-            <span className="text-sm font-mono text-teal-700">{temp}</span>
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="text-sm font-medium text-slate-700">Last month&apos;s avg temp (&deg;C)</label>
+            <input type="number" step="0.1" className={numberBoxClass}
+              value={temp} onChange={(e) => setTemp(Number(e.target.value))} />
           </div>
-          <input type="range" min={15} max={32} step={0.5}
+          <input type="range" min={15} max={32} step={0.1}
             value={temp} onChange={(e) => setTemp(Number(e.target.value))}
             className="w-full accent-teal-600 mb-4" />
 
-          <div className="flex justify-between items-baseline mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-sm font-medium text-slate-700">Last month&apos;s avg precipitation (mm/day)</label>
-            <span className="text-sm font-mono text-teal-700">{precip}</span>
+            <input type="number" step="0.1" className={numberBoxClass}
+              value={precip} onChange={(e) => setPrecip(Number(e.target.value))} />
           </div>
-          <input type="range" min={0} max={10} step={0.5}
+          <input type="range" min={0} max={20} step={0.1}
             value={precip} onChange={(e) => setPrecip(Number(e.target.value))}
             className="w-full accent-teal-600 mb-4" />
 
-          <div className="flex justify-between items-baseline mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-sm font-medium text-slate-700">Last month&apos;s avg humidity (%)</label>
-            <span className="text-sm font-mono text-teal-700">{humidity}</span>
+            <input type="number" step="0.1" className={numberBoxClass}
+              value={humidity} onChange={(e) => setHumidity(Number(e.target.value))} />
           </div>
-          <input type="range" min={40} max={100} step={1}
+          <input type="range" min={30} max={100} step={0.5}
             value={humidity} onChange={(e) => setHumidity(Number(e.target.value))}
             className="w-full accent-teal-600 mb-4" />
 
