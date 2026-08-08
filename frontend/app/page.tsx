@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import RiskGauge from "./components/RiskGauge";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type District = {
   district: string;
@@ -15,7 +18,7 @@ type PredictResult = {
   message: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function Home() {
   const [districts, setDistricts] = useState<District[]>([]);
@@ -27,9 +30,10 @@ export default function Home() {
   const [precip, setPrecip] = useState(2);
   const [humidity, setHumidity] = useState(78);
   const [result, setResult] = useState<PredictResult | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-fetch(`${API_URL}/districts`)
+    fetch(`${API_URL}/districts`)
       .then((res) => res.json())
       .then((data) => {
         setDistricts(data);
@@ -51,8 +55,9 @@ fetch(`${API_URL}/districts`)
   }
 
   function handlePredict() {
-fetch(`${API_URL}/predict`, {
-        method: "POST",
+    setLoading(true);
+    fetch(`${API_URL}/predict`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         district,
@@ -65,26 +70,47 @@ fetch(`${API_URL}/predict`, {
       }),
     })
       .then((res) => res.json())
-      .then((data) => setResult(data));
+      .then((data) => setResult(data))
+      .finally(() => setLoading(false));
   }
 
+  const inputClass =
+    "w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow bg-white";
+  const labelClass = "block text-sm font-medium mb-1.5 text-slate-700";
+  const cardClass = "bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 rounded-xl p-6 shadow-sm";
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="max-w-3xl mx-auto px-6 py-5">
-          <h1 className="text-xl font-bold">DengueWatch LK</h1>
-          <p className="text-sm text-slate-500">Dengue outbreak early-warning tool for Sri Lanka</p>
+    <div className="min-h-screen bg-white text-slate-900">
+      <header className="border-b border-slate-100 bg-white sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <span className="text-sm font-semibold tracking-tight text-teal-800">DengueWatch LK</span>
+          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
+            AI Challenge Sri Lanka 2026
+          </span>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8 grid md:grid-cols-2 gap-6">
-        {/* Input card */}
-        <section className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="font-semibold mb-4">Forecast conditions</h2>
+      <div className="max-w-4xl mx-auto px-6 pt-10 pb-4">
+        <p className="text-xs font-semibold tracking-widest text-teal-700 uppercase mb-2">
+          Live model &middot; Random Forest &middot; 2021 held-out
+        </p>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-3">
+          Where will dengue <span className="text-teal-600 italic">strike next</span>?
+        </h1>
+        <p className="text-slate-600 max-w-2xl">
+          A district-level early-warning model trained on three years of Sri Lankan rainfall,
+          temperature, and dengue case data. Adjust last month&apos;s conditions to see this
+          month&apos;s outbreak-risk outlook.
+        </p>
+      </div>
 
-          <label className="block text-sm font-medium mb-1">District</label>
+      <main className="max-w-4xl mx-auto px-6 pb-10 pt-4 grid md:grid-cols-2 gap-8">
+        <section className={cardClass}>
+          <h2 className="font-semibold mb-4 text-slate-800">Forecast conditions</h2>
+
+          <label className={labelClass}>District</label>
           <select
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
+            className={inputClass}
             value={district}
             onChange={(e) => handleDistrictChange(e.target.value)}
           >
@@ -93,58 +119,91 @@ fetch(`${API_URL}/predict`, {
             ))}
           </select>
 
-          <label className="block text-sm font-medium mb-1">Forecast month (1-12)</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={month} onChange={(e) => setMonth(Number(e.target.value))} />
+          <label className={labelClass}>Forecast month</label>
+          <div className="grid grid-cols-6 gap-1.5 mb-4">
+            {MONTHS.map((label, i) => {
+              const m = i + 1;
+              const isSelected = month === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMonth(m)}
+                  className={`text-xs font-medium py-2 rounded-md border transition-colors ${
+                    isSelected
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-slate-600 border-slate-300 hover:border-emerald-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
 
-          <label className="block text-sm font-medium mb-1">Last month&apos;s cases</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={lastMonthCases} onChange={(e) => setLastMonthCases(Number(e.target.value))} />
+          <div className="flex justify-between items-baseline mb-1.5">
+            <label className="text-sm font-medium text-slate-700">Last month&apos;s cases</label>
+            <span className="text-sm font-mono text-teal-700">{lastMonthCases}</span>
+          </div>
+          <input type="range" min={0} max={3000} step={5}
+            value={lastMonthCases} onChange={(e) => setLastMonthCases(Number(e.target.value))}
+            className="w-full accent-teal-600 mb-4" />
 
-          <label className="block text-sm font-medium mb-1">3-month average cases</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={recentAvgCases} onChange={(e) => setRecentAvgCases(Number(e.target.value))} />
+          <div className="flex justify-between items-baseline mb-1.5">
+            <label className="text-sm font-medium text-slate-700">3-month average cases</label>
+            <span className="text-sm font-mono text-teal-700">{recentAvgCases}</span>
+          </div>
+          <input type="range" min={0} max={3000} step={5}
+            value={recentAvgCases} onChange={(e) => setRecentAvgCases(Number(e.target.value))}
+            className="w-full accent-teal-600 mb-4" />
 
-          <label className="block text-sm font-medium mb-1">Last month&apos;s avg temp (°C)</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={temp} onChange={(e) => setTemp(Number(e.target.value))} />
+          <div className="flex justify-between items-baseline mb-1.5">
+            <label className="text-sm font-medium text-slate-700">Last month&apos;s avg temp (°C)</label>
+            <span className="text-sm font-mono text-teal-700">{temp}</span>
+          </div>
+          <input type="range" min={15} max={32} step={0.5}
+            value={temp} onChange={(e) => setTemp(Number(e.target.value))}
+            className="w-full accent-teal-600 mb-4" />
 
-          <label className="block text-sm font-medium mb-1">Last month&apos;s avg precipitation (mm/day)</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={precip} onChange={(e) => setPrecip(Number(e.target.value))} />
+          <div className="flex justify-between items-baseline mb-1.5">
+            <label className="text-sm font-medium text-slate-700">Last month&apos;s avg precipitation (mm/day)</label>
+            <span className="text-sm font-mono text-teal-700">{precip}</span>
+          </div>
+          <input type="range" min={0} max={10} step={0.5}
+            value={precip} onChange={(e) => setPrecip(Number(e.target.value))}
+            className="w-full accent-teal-600 mb-4" />
 
-          <label className="block text-sm font-medium mb-1">Last month&apos;s avg humidity (%)</label>
-          <input type="number" className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4"
-            value={humidity} onChange={(e) => setHumidity(Number(e.target.value))} />
+          <div className="flex justify-between items-baseline mb-1.5">
+            <label className="text-sm font-medium text-slate-700">Last month&apos;s avg humidity (%)</label>
+            <span className="text-sm font-mono text-teal-700">{humidity}</span>
+          </div>
+          <input type="range" min={40} max={100} step={1}
+            value={humidity} onChange={(e) => setHumidity(Number(e.target.value))}
+            className="w-full accent-teal-600 mb-4" />
 
           <button
             onClick={handlePredict}
-            className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium rounded-lg py-2.5 transition-colors"
+            disabled={loading}
+            className="w-full bg-teal-700 hover:bg-teal-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 transition-colors"
           >
-            Predict Risk
+            {loading ? "Predicting..." : "Predict Risk"}
           </button>
         </section>
 
-        {/* Result card */}
-        <section className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+        <section className={`${cardClass} flex flex-col items-center justify-center text-center`}>
           {result ? (
             <>
-              <div
-                className={`text-2xl font-bold px-4 py-1 rounded-full mb-3 ${
-                  result.risk_tier === "Elevated"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-green-100 text-green-700"
-                }`}
-              >
-                {result.risk_tier}
-              </div>
-              <p className="text-sm text-slate-500 mb-4">
-                {(result.confidence * 100).toFixed(1)}% model confidence
-              </p>
-              <p className="text-sm">{result.message}</p>
+              <RiskGauge
+                tier={result.risk_tier as "Normal" | "Elevated"}
+                confidence={result.confidence}
+              />
+              <p className="text-sm text-slate-600 mt-4">{result.message}</p>
             </>
           ) : (
-            <p className="text-slate-400 text-sm">Fill in the form and click Predict Risk to see a result.</p>
+            <>
+              <RiskGauge tier={null} confidence={null} />
+              <p className="text-slate-400 text-sm mt-4">Fill in the form and click Predict Risk to see a result.</p>
+            </>
           )}
         </section>
       </main>
