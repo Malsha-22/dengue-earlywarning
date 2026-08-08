@@ -15,6 +15,8 @@ type PredictResult = {
   message: string;
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function Home() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [district, setDistrict] = useState("");
@@ -27,7 +29,7 @@ export default function Home() {
   const [result, setResult] = useState<PredictResult | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/districts")
+fetch(`${API_URL}/districts`)
       .then((res) => res.json())
       .then((data) => {
         setDistricts(data);
@@ -49,8 +51,8 @@ export default function Home() {
   }
 
   function handlePredict() {
-    fetch("http://localhost:8000/predict", {
-      method: "POST",
+fetch(`${API_URL}/predict`, {
+        method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         district,
